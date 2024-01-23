@@ -30,20 +30,18 @@ function start(client) {
   });
 
   app.post('/api/receipt/send', (req, res) => {
-    const { action, customer_name, customer_id, payment, invoice_number, initial_number, final_balance, created_at, menu_names, menu_amount, menu_prices, menu_kinds, menu_discounts, menu_discount_percents } = req.body;
+    const { action, customer_name, customer_id, payment, invoice_number, final_balance, number, menu_names: menuNames, menu_amount: menuAmounts, menu_kinds: menuKinds, created_at } = req.body;
 
-    let menuNames = menu_names.split(',');
-    let menuAmounts = menu_amount.split(',');
-    let menuKinds = menu_kinds.split(',');
+    const whatsappNumber = `62${number.slice(1)}@c.us`;
+    const date = new Date(created_at);
+    const formattedDateWithTime = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}`;
 
-    const whatsappNumber = `62${customer_id.slice(1)}@c.us`;
-
-    const topupNotification = `Invoice: ${invoice_number}\n\nAnda baru saja melakukan top-up sejumlah *Rp. ${Intl.NumberFormat(['ban', 'id']).format(payment)},-* sehingga saldo anda saat ini adalah Rp. ${Intl.NumberFormat([
+    const topupNotification = `${formattedDateWithTime}\nInvoice: ${invoice_number}\n\nAnda baru saja melakukan top-up sejumlah *Rp. ${Intl.NumberFormat(['ban', 'id']).format(
+      payment
+    )},-* sehingga saldo anda saat ini adalah Rp. ${Intl.NumberFormat(['ban', 'id']).format(final_balance)},-\nSelamat bersantai, ${customer_name}!\n--------------------\n_You just did top-up with an amount of *IDR ${Intl.NumberFormat([
       'ban',
       'id',
-    ]).format(final_balance)},-\nSelamat bersantai, ${customer_name}!\n--------------------\n_You just did top-up with an amount of *IDR ${Intl.NumberFormat(['ban', 'id']).format(
-      payment
-    )},-* so your balance is now_ _IDR ${Intl.NumberFormat('en-US').format(final_balance)},-_\n_Happy Drinking, ${customer_name}!_`;
+    ]).format(payment)},-* so your balance is now_ _IDR ${Intl.NumberFormat('en-US').format(final_balance)},-_\n_Happy Drinking, ${customer_name}!_`;
 
     let menuSummary = '';
     menuNames.forEach((menuName, i) => {
@@ -54,7 +52,7 @@ function start(client) {
       }
     });
 
-    const paymentNotification = `Invoice: ${invoice_number}\n\nAnda baru saja melakukan payment sejumlah *Rp. ${Intl.NumberFormat(['ban', 'id']).format(
+    const paymentNotification = `${formattedDateWithTime}\nInvoice: ${invoice_number}\n\nAnda baru saja melakukan payment sejumlah *Rp. ${Intl.NumberFormat(['ban', 'id']).format(
       payment
     )},-* dengan rincian pesanan sebagai berikut:\n\n${menuSummary}\nsisa saldo anda saat ini adalah Rp. ${Intl.NumberFormat(['ban', 'id']).format(
       final_balance
@@ -62,7 +60,7 @@ function start(client) {
       payment
     )}* and following order detail:_\n\n${menuSummary}\n_so your balance is now IDR ${Intl.NumberFormat('en-US').format(final_balance)}_\n_Happy Drinking, ${customer_name}!_`;
 
-    const checkoutNotification = `Invoice: ${invoice_number}\n\nAnda baru saja melakukan checkout dan menerima sejumlah uang deposit anda sebesar *Rp. ${Intl.NumberFormat(['ban', 'id']).format(
+    const checkoutNotification = `${formattedDateWithTime}\nInvoice: ${invoice_number}\n\nAnda baru saja melakukan checkout dan menerima sejumlah uang deposit anda sebesar *Rp. ${Intl.NumberFormat(['ban', 'id']).format(
       payment
     )},-*. \nSampai jumpa di lain waktu, ${customer_name}!\n--------------------\n_You just did checkout and received your deposit with an amount of *IDR ${Intl.NumberFormat('en-US').format(
       payment
@@ -83,13 +81,13 @@ function start(client) {
   });
 
   app.post('/api/notification/send', (req, res) => {
-    const { customer_name, customer_id, balance } = req.body;
+    const { customer_name, customer_id, number, balance } = req.body;
 
     const balanceNotification = `Kartu anda atas nama ${customer_name} memiliki saldo sebesar *Rp. ${Intl.NumberFormat(['ban', 'id']).format(
       balance
     )},-*\n--------------------\n_Your card with name ${customer_name} has a balance of *IDR ${Intl.NumberFormat('en-US').format(balance)}*_`;
 
-    const whatsappNumber = `62${customer_id.slice(1)}@c.us`;
+    const whatsappNumber = `62${number.slice(1)}@c.us`;
 
     client.sendText(whatsappNumber, balanceNotification);
 
